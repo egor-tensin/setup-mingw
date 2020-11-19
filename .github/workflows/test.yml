@@ -1,0 +1,48 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly, at 5:45 AM on Friday (somewhat randomly chosen).
+    - cron: '45 6 * * 5'
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, windows-2019, windows-2016]
+        platform: [x86, x64]
+
+        include:
+          # Prettier run names.
+          - {os: ubuntu-18.04, name: Ubuntu}
+          - {os: windows-2019, name: Windows Server 2019}
+          - {os: windows-2016, name: Windows Server 2016}
+
+    runs-on: '${{ matrix.os }}'
+
+    name: '${{ matrix.name }} / ${{ matrix.platform }}'
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up MinGW
+        id: setup
+        uses: ./
+        with:
+          platform: '${{ matrix.platform }}'
+
+      - name: Build foo.exe
+        run: |
+          & '${{ steps.setup.outputs.gxx }}' -std=c++11 -o foo foo.cpp
+          if ('${{ runner.os }}' -eq 'Windows') {
+              .\foo.exe
+          }
