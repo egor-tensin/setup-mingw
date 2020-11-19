@@ -12,7 +12,7 @@ inputs:
     default: 0
   static:
     description: Enable static linking workaround
-    required: False
+    required: false
     default: 1
 
 outputs:
