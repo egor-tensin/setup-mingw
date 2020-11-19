@@ -1,6 +1,8 @@
 Set up MinGW-w64
 ================
 
+![Test](https://github.com/egor-tensin/setup-mingw/workflows/Test/badge.svg)
+
 This is a GitHub action that sets up MinGW-w64 in your workflow run.
 
 1. Installs MinGW-w64 on either Ubuntu or Windows.
