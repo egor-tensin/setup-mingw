@@ -5,7 +5,7 @@ on:
   pull_request:
   schedule:
     # Weekly, at 5:45 AM on Friday (somewhat randomly chosen).
-    - cron: '45 6 * * 5'
+    - cron: '45 5 * * 5'
   workflow_dispatch:
 
 jobs:
