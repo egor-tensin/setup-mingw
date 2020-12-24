@@ -47,6 +47,15 @@ runs:
         $prefix64 = 'x86_64-w64-mingw32'
         $prefix = if ($x64) { $prefix64 } else { $prefix32 }
 
+        function Locate-Choco {
+            $path = Get-Command 'choco' -ErrorAction SilentlyContinue
+            if ($path) {
+                $path.Path
+            } else {
+                Join-Path ${env:ProgramData} 'chocolatey' 'bin' 'choco'
+            }
+        }
+
         if ($linux_host) {
             sudo apt install mingw-w64
 
@@ -68,8 +77,9 @@ runs:
                     "/usr/$prefix64/lib/libwinpthread.dll.a"
             }
         } elseif ($cygwin_host) {
+            $choco = Locate-Choco
             $cygwin_pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
-            choco.exe install -y --no-progress --source=cygwin $cygwin_pkg
+            & $choco install -y --no-progress --source=cygwin $cygwin_pkg
 
             if ($static_workaround) {
                 $cygwin_lib = Join-Path C: tools cygwin usr $prefix sys-root mingw lib
@@ -77,6 +87,8 @@ runs:
                 Remove-Item (Join-Path $cygwin_lib 'libwinpthread.dll.a')
             }
         } elseif ($windows_host) {
+            $choco = Locate-Choco
+
             $mingw32 = 'mingw32'
             $mingw64 = 'mingw64'
             $mingw = if ($x64) { $mingw64 } else { $mingw32 }
@@ -97,12 +109,12 @@ runs:
                 # Assuming the 64-bit version is installed.  If 32-bit version
                 # is installed, we won't detect that.  But it's not _that_
                 # important, and we save a lot of time.
-                choco.exe install -y --no-progress mingw
+                & $choco install -y --no-progress mingw
                 echo $mingw64_bin >> $env:GITHUB_PATH
             } else {
                 # Assuming the 64-bit version is installed.
-                choco.exe uninstall -y --no-progress mingw
-                choco.exe install -y --no-progress --x86 mingw
+                & $choco uninstall -y --no-progress mingw
+                & $choco install -y --no-progress --x86 mingw
                 echo $mingw32_bin >> $env:GITHUB_PATH
             }
 
