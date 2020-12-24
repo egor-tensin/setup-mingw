@@ -17,11 +17,12 @@ Use it in your workflow like this:
       with:
         platform: x64
 
-`x64` is the default value for the `platform` parameter and can be omitted.
+* `x64` is the default value for the `platform` parameter and can be omitted.
 Use `x86` if you want to build 32-bit binaries.
+* Set the `cygwin` parameter to `1` to set up MinGW inside an existing Cygwin
+installation (see [my other action] for setting up Cygwin itself).
 
-Set the `cygwin` parameter to `1` to set up MinGW inside an existing Cygwin
-installation (installing Cygwin itself is as simple as `choco install cygwin`).
+[my other action]: https://github.com/egor-tensin/setup-cygwin
 
 API
 ---
