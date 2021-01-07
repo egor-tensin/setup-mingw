@@ -56,8 +56,47 @@ runs:
             }
         }
 
+        function Install-Package {
+            param(
+                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
+                [string[]] $Packages
+            )
+
+            if ($script:linux_host) {
+                sudo apt-get update -yq
+                sudo apt-get install -yq --no-install-recommends $Packages
+            } elseif ($script:cygwin_host) {
+                $choco = Locate-Choco
+                & $choco install -y --no-progress --source=cygwin $Packages
+            } elseif ($script:windows_host) {
+                $choco = Locate-Choco
+                & $choco install -y --no-progress $Packages
+            } else {
+                throw "Sorry, installing packages is unsupported on $script:os"
+            }
+        }
+
+        function Remove-Package {
+            param(
+                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
+                [string[]] $Packages
+            )
+
+            if ($script:linux_host) {
+                sudo apt-get autoremove --purge -yq $Packages
+            } elseif ($script:cygwin_host) {
+                $choco = Locate-Choco
+                & $choco uninstall -y --no-progress --source=cygwin $Packages
+            } elseif ($script:windows_host) {
+                $choco = Locate-Choco
+                & $choco uninstall -y --no-progress $Packages
+            } else {
+                throw "Sorry, removing packages is unsupported on $script:os"
+            }
+        }
+
         if ($linux_host) {
-            sudo apt install mingw-w64
+            Install-Package mingw-w64
 
             # Make the compilers use the POSIX threading model, whatever that
             # is.  Without it, the stuff from <mutex>/<thread>/etc. doesn't
@@ -77,9 +116,8 @@ runs:
                     "/usr/$prefix64/lib/libwinpthread.dll.a"
             }
         } elseif ($cygwin_host) {
-            $choco = Locate-Choco
-            $cygwin_pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
-            & $choco install -y --no-progress --source=cygwin $cygwin_pkg
+            $pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
+            Install-Package $pkg
 
             if ($static_workaround) {
                 $cygwin_lib = Join-Path C: tools cygwin usr $prefix sys-root mingw lib
@@ -106,15 +144,14 @@ runs:
             $mingw_lib = Join-Path $mingw_root $prefix lib
 
             if ($x64) {
-                # Assuming the 64-bit version is installed.  If 32-bit version
-                # is installed, we won't detect that.  But it's not _that_
-                # important, and we save a lot of time.
-                & $choco install -y --no-progress mingw
+                # If 32-bit version is installed, we won't detect that.  But
+                # it's not _that important, and we save a lot of time.
+                Install-Package mingw
                 echo $mingw64_bin >> $env:GITHUB_PATH
             } else {
                 # Assuming the 64-bit version is installed.
-                & $choco uninstall -y --no-progress mingw
-                & $choco install -y --no-progress --x86 mingw
+                Remove-Package mingw
+                Install-Package --x86 mingw
                 echo $mingw32_bin >> $env:GITHUB_PATH
             }
 
