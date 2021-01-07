@@ -38,7 +38,7 @@ runs:
 
         New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
         New-Variable cygwin_host -Value ('${{ inputs.cygwin }}' -eq '1') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin) -Option Constant
+        New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin_host) -Option Constant
 
         New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
         New-Variable static_workaround -Value ('${{ inputs.static }}' -eq '1') -Option Constant
