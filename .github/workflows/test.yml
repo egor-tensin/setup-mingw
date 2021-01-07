@@ -13,14 +13,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-2019, windows-2016]
         platform: [x86, x64]
+        cygwin: [0, 1]
+        os: [ubuntu-18.04, windows-2019, windows-2016]
 
         include:
           # Prettier run names.
           - {os: ubuntu-18.04, name: Ubuntu}
           - {os: windows-2019, name: Windows Server 2019}
           - {os: windows-2016, name: Windows Server 2016}
+          - {cygwin: 1, name: Cygwin}
+        exclude:
+          # No Cygwin on Ubuntu.
+          - {os: ubuntu-18.04, cygwin: 1}
+          # Cygwin is the same on Windows Server 2016 & 2019.
+          - {os: windows-2016, cygwin: 1}
 
     runs-on: '${{ matrix.os }}'
 
@@ -34,15 +41,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v1
+        if: runner.os == 'Windows'
+
+      - name: Install Cygwin
+        uses: egor-tensin/setup-cygwin@master
+        if: matrix.cygwin
+
       - name: Set up MinGW
         id: setup
         uses: ./
         with:
           platform: '${{ matrix.platform }}'
+          cygwin: '${{ matrix.cygwin }}'
 
       - name: Build foo.exe
         run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++11 -o foo foo.cpp
+          $flags = '-std=c++11','-o','foo','foo.cpp'
+          & '${{ steps.setup.outputs.gxx }}' $flags
           if ('${{ runner.os }}' -eq 'Windows') {
               .\foo.exe
           }
