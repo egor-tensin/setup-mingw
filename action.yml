@@ -119,10 +119,14 @@ runs:
             $pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
             Install-Package $pkg
 
+            $bin_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/bin"
+            $lib_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/lib"
+
+            echo $bin_dir >> $env:GITHUB_PATH
+
             if ($static_workaround) {
-                $cygwin_lib = Join-Path C: tools cygwin usr $prefix sys-root mingw lib
-                Remove-Item (Join-Path $cygwin_lib 'libpthread.dll.a')
-                Remove-Item (Join-Path $cygwin_lib 'libwinpthread.dll.a')
+                Remove-Item (Join-Path $lib_dir 'libpthread.dll.a')
+                Remove-Item (Join-Path $lib_dir 'libwinpthread.dll.a')
             }
         } elseif ($windows_host) {
             $choco = Locate-Choco
