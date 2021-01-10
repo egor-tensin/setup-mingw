@@ -7,7 +7,7 @@ inputs:
     required: false
     default: x64
   cygwin:
-    description: Install inside Cygwin
+    description: Install Cygwin packages
     required: false
     default: 0
   static:
