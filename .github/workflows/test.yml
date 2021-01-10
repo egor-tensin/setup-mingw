@@ -58,8 +58,22 @@ jobs:
 
       - name: Build foo.exe
         run: |
-          $flags = '-std=c++11','-o','foo','foo.cpp'
+          $flags = '-std=c++14','-o','foo','foo.cpp'
           & '${{ steps.setup.outputs.gxx }}' $flags
-          if ('${{ runner.os }}' -eq 'Windows') {
-              .\foo.exe
-          }
+
+      - name: Run foo.exe
+        run: |
+          $expected = @"
+          Doing something #1
+          Doing something #2
+          Doing something #3
+          "@
+
+          $actual = & (Join-Path . foo.exe)
+          $actual = $actual -join [Environment]::NewLine
+
+          $($actual -eq $expected) -or $(throw @"
+          Unexpected output:
+          $actual
+          "@)
+        if: runner.os == 'Windows'
