@@ -21,20 +21,27 @@ Use it in your workflow like this:
 Use `x86` if you want to build 32-bit binaries.
 * Set the `cygwin` parameter to `1` to set up MinGW inside an existing Cygwin
 installation (see [my other action] for setting up Cygwin itself).
+* `cc` and `c++` executables are set up, pointing to the `*-gcc` and `*-g++`
+executables.
+Disable this by setting the `cc` parameter to `0`.
 
 [my other action]: https://github.com/egor-tensin/setup-cygwin
 
 API
 ---
 
-| Input    | Value   | Default | Description
-| -------- | ------- | ------- | -----------
-| platform | x64     | Yes     | Install the x86_64 toolchain.
-|          | *Other* | No      | Install the i686 toolchain.
-| cygwin   | 1       | No      | Install Cygwin packages.
-|          | *Other* | Yes     | Install native binaries.
-| static   | 1       | Yes     | Enable the static-linking workaround.
-|          | *Other* | No      | Disable the static-linking workaround.
+| Input     | Value   | Default | Description
+| --------- | ------- | ------- | -----------
+| platform  | x64     | Yes     | Install the x86_64 toolchain.
+|           | *Other* | No      | Install the i686 toolchain.
+| cygwin    | *Other* | Yes     | Install native binaries.
+|           | 1       | No      | Install Cygwin packages.
+| static    | 1       | Yes     | Enable the static-linking workaround.
+|           | *Other* | No      | Disable the static-linking workaround.
+| cc        | 1       | Yes     | Set up `cc`/`c++` executables.
+|           | *Other* | No      | Don't set up `cc`/`c++`.
+| hardlinks | *Other* | Yes     | Cygwin: don't convert any symlinks.
+|           | 1       | No      | Cygwin: convert symlinks in /usr/bin to hardlinks.
 
 | Output  | Example                  | Description
 | ------- | ------------------------ | -----------
