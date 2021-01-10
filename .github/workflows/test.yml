@@ -15,6 +15,7 @@ jobs:
       matrix:
         platform: [x86, x64]
         cygwin: [0, 1]
+        hardlinks: [0, 1]
         os: [ubuntu-18.04, windows-2019, windows-2016]
 
         include:
@@ -28,10 +29,12 @@ jobs:
           - {os: ubuntu-18.04, cygwin: 1}
           # Cygwin is the same on Windows Server 2016 & 2019.
           - {os: windows-2016, cygwin: 1}
+          # Only test hardlinks on Cygwin.
+          - {cygwin: 0, hardlinks: 1}
 
     runs-on: '${{ matrix.os }}'
 
-    name: '${{ matrix.name }} / ${{ matrix.platform }}'
+    name: '${{ matrix.name }} / ${{ matrix.platform }} / Hardlinks: ${{ matrix.hardlinks }}'
 
     defaults:
       run:
@@ -55,6 +58,8 @@ jobs:
         with:
           platform: '${{ matrix.platform }}'
           cygwin: '${{ matrix.cygwin }}'
+          cc: 1
+          hardlinks: '${{ matrix.hardlinks }}'
 
       - name: Build foo.exe
         run: |
@@ -77,3 +82,26 @@ jobs:
           $actual
           "@)
         if: runner.os == 'Windows'
+
+      # Is this really the most stable piece of `gcc --version` output?
+      - name: Check cc/c++
+        run: |
+          echo (Get-Command cc).Path
+          $cc = & cc --version
+          echo $cc
+          $($cc | Select-String -Pattern "This is free software; see the source for copying conditions." -SimpleMatch -Quiet) -or $(throw "Unexpected `cc --version` output")
+          echo (Get-Command c++).Path
+          $cxx = & c++ --version
+          echo $cxx
+          $($cxx | Select-String -Pattern "This is free software; see the source for copying conditions." -SimpleMatch -Quiet) -or $(throw "Unexpected `c++ --version` output")
+        if: '!matrix.cygwin || matrix.hardlinks'
+
+      - name: Check cc/c++ on Cygwin
+        run: |
+          $cc = bash.exe --login -o errexit -c 'cc --version'
+          echo $cc
+          $($cc | Select-String -Pattern "This is free software; see the source for copying conditions." -SimpleMatch -Quiet) -or $(throw "Unexpected `cc --version` output")
+          $cxx = bash.exe --login -o errexit -c 'c++ --version'
+          echo $cxx
+          $($cxx | Select-String -Pattern "This is free software; see the source for copying conditions." -SimpleMatch -Quiet) -or $(throw "Unexpected `c++ --version` output")
+        if: matrix.cygwin && !matrix.hardlinks
