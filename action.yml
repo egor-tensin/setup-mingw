@@ -144,15 +144,8 @@ runs:
             $mingw = if ($x64) { $mingw64 } else { $mingw32 }
 
             $mingw_install = Join-Path C: ProgramData chocolatey lib mingw tools install
-
-            $mingw32_root = Join-Path $mingw_install $mingw32
-            $mingw64_root = Join-Path $mingw_install $mingw64
             $mingw_root = Join-Path $mingw_install $mingw
-
-            $mingw32_bin = Join-Path $mingw32_root bin
-            $mingw64_bin = Join-Path $mingw64_root bin
             $mingw_bin = Join-Path $mingw_root bin
-
             $mingw_lib = Join-Path $mingw_root $prefix lib
 
             $pkg = 'mingw'
@@ -166,11 +159,10 @@ runs:
             Remove-Package $pkg
             if ($x64) {
                 Install-Package $pkg --version $version
-                echo $mingw64_bin >> $env:GITHUB_PATH
             } else {
                 Install-Package $pkg --version $version --x86
-                echo $mingw32_bin >> $env:GITHUB_PATH
             }
+            echo $mingw_bin >> $env:GITHUB_PATH
 
             if ($static_workaround) {
                 Remove-Item (Join-Path $mingw_lib 'libpthread.dll.a')
