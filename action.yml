@@ -75,10 +75,10 @@ runs:
                 sudo apt-get install -yq --no-install-recommends $Packages
             } elseif ($script:cygwin_host) {
                 $choco = Locate-Choco
-                & $choco install -y --no-progress --source=cygwin $Packages
+                & $choco install $Packages -y --no-progress --source=cygwin
             } elseif ($script:windows_host) {
                 $choco = Locate-Choco
-                & $choco install -y --no-progress $Packages
+                & $choco upgrade $Packages -y --no-progress --allow-downgrade
             } else {
                 throw "Sorry, installing packages is unsupported on $script:os"
             }
@@ -94,10 +94,10 @@ runs:
                 sudo apt-get autoremove --purge -yq $Packages
             } elseif ($script:cygwin_host) {
                 $choco = Locate-Choco
-                & $choco uninstall -y --no-progress --source=cygwin $Packages
+                & $choco uninstall $Packages -y --no-progress --source=cygwin
             } elseif ($script:windows_host) {
                 $choco = Locate-Choco
-                & $choco uninstall -y --no-progress $Packages
+                & $choco uninstall $Packages -y --no-progress
             } else {
                 throw "Sorry, removing packages is unsupported on $script:os"
             }
@@ -156,10 +156,10 @@ runs:
             #      <thread>, etc.).
             $version = '8.1.0'
 
-            Remove-Package $pkg
             if ($x64) {
                 Install-Package $pkg --version $version
             } else {
+                Remove-Package $pkg
                 Install-Package $pkg --version $version --x86
             }
             echo $mingw_bin >> $env:GITHUB_PATH
