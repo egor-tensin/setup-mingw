@@ -157,8 +157,11 @@ runs:
             $version = '8.1.0'
 
             if ($x64) {
+                # If the 32-bit version is installed, we won't detect that.
+                # But it's not that important, and we save a lot of time.
                 Install-Package $pkg --version $version
             } else {
+                # Assuming the 64-bit version is installed.
                 Remove-Package $pkg
                 Install-Package $pkg --version $version --x86
             }
