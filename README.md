@@ -1,7 +1,7 @@
 Set up MinGW-w64
 ================
 
-[![Test](https://github.com/egor-tensin/setup-mingw/workflows/Test/badge.svg)](https://github.com/egor-tensin/setup-mingw/actions?query=workflow%3ATest)
+[![Test](https://github.com/egor-tensin/setup-mingw/actions/workflows/test.yml/badge.svg)](https://github.com/egor-tensin/setup-mingw/actions/workflows/test.yml)
 
 This is a GitHub action that sets up MinGW-w64 in your workflow run.
 
