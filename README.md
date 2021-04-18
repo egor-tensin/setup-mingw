@@ -32,16 +32,16 @@ API
 
 | Input     | Value   | Default | Description
 | --------- | ------- | ------- | -----------
-| platform  | x64     | Yes     | Install the x86_64 toolchain.
-|           | *Other* | No      | Install the i686 toolchain.
-| cygwin    | *Other* | Yes     | Install native binaries.
-|           | 1       | No      | Install Cygwin packages.
-| static    | 1       | Yes     | Enable the static-linking workaround.
-|           | *Other* | No      | Disable the static-linking workaround.
-| cc        | 1       | Yes     | Set up `cc`/`c++` executables.
-|           | *Other* | No      | Don't set up `cc`/`c++`.
-| hardlinks | *Other* | Yes     | Cygwin: don't convert any symlinks.
-|           | 1       | No      | Cygwin: convert symlinks in /usr/bin to hardlinks.
+| platform  | x64     | ✓       | Install the x86_64 toolchain.
+|           | *Other* |         | Install the i686 toolchain.
+| cygwin    | *Other* | ✓       | Install native binaries.
+|           | 1       |         | Install Cygwin packages.
+| static    | 1       | ✓       | Enable the static-linking workaround.
+|           | *Other* |         | Disable the static-linking workaround.
+| cc        | 1       | ✓       | Set up `cc`/`c++` executables.
+|           | *Other* |         | Don't set up `cc`/`c++`.
+| hardlinks | *Other* | ✓       | Cygwin: don't convert any symlinks.
+|           | 1       |         | Cygwin: convert symlinks in /usr/bin to hardlinks.
 
 | Output  | Example                  | Description
 | ------- | ------------------------ | -----------
