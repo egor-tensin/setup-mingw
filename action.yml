@@ -71,8 +71,8 @@ runs:
             )
 
             if ($script:linux_host) {
-                sudo apt-get update -yq
-                sudo apt-get install -yq --no-install-recommends $Packages
+                sudo apt-get update
+                sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends $Packages
             } elseif ($script:cygwin_host) {
                 $choco = Locate-Choco
                 & $choco install $Packages -y --no-progress --source=cygwin
