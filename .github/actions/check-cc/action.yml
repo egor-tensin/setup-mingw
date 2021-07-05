@@ -1,0 +1,25 @@
+name: Check cc/c++
+description: Check cc/c++
+runs:
+  using: composite
+  steps:
+    - run: |
+        $version = '${{ inputs.version }}'
+
+        function Check-Exe {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $Exe
+            )
+
+            echo (Get-Command $Exe).Path
+            $output = & $Exe --version
+            echo $output
+
+            # Is this really the most stable piece of `gcc --version` output?
+            $($output | Select-String -Pattern "This is free software; see the source for copying conditions." -SimpleMatch -Quiet) -or $(throw "Unexpected `$Exe --version` output")
+        }
+
+        Check-Exe cc
+        Check-Exe c++
+      shell: pwsh

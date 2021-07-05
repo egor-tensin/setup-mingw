@@ -1,0 +1,26 @@
+name: Run foo.exe
+description: Run foo.exe and verify its output
+runs:
+  using: composite
+  steps:
+    - run: |
+        $expected = @"
+        Doing something #1
+        Doing something #2
+        Doing something #3
+        "@
+
+        $actual = & (Join-Path . foo)
+        $actual = $actual -join [Environment]::NewLine
+
+        echo @"
+        Expected output:
+        $expected
+        "@
+        echo @"
+        Actual output:
+        $actual
+        "@
+
+        $($actual -eq $expected) -or $(throw "Unexpected output!")
+      shell: pwsh

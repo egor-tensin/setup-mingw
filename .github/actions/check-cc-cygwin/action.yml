@@ -1,0 +1,26 @@
+name: Check cc/c++
+description: Check cc/c++ (on Cygwin)
+runs:
+  using: composite
+  steps:
+    - run: |
+        check_tool() {
+            local exe
+            for exe; do
+                full_path="$( command -v "$exe" )"
+                echo "$full_path"
+
+                output="$( "$full_path" --version )"
+                echo "$output"
+
+                # Is this really the most stable piece of `gcc --version` output?
+                if ! echo "$output" | grep -F -- "This is free software; see the source for copying conditions."; then
+                    echo 'Unexpected `'"$exe"' --version` output.' >&2
+                    exit 1
+                fi
+            done
+        }
+
+        check_tool cc
+        check_tool c++
+      shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
