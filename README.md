@@ -46,9 +46,9 @@ API
 | Output  | Example                  | Description
 | ------- | ------------------------ | -----------
 | prefix  | x86_64-w64-mingw32       | Cross-compilation toolchain prefix
-| gcc     | x86_64-w64-mingw32-gcc   | gcc binary name
-| gxx     | i686-w64-mingw32-g++     | g++ binary name
-| windres | i686-w64-mingw32-windres | windres binary name
+| gcc     | x86_64-w64-mingw32-gcc   | `gcc` binary name
+| gxx     | i686-w64-mingw32-g++     | `g++` binary name
+| windres | i686-w64-mingw32-windres | `windres` binary name
 
 License
 -------
