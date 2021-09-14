@@ -149,21 +149,15 @@ runs:
             $mingw_lib = Join-Path $mingw_root $prefix lib
 
             $pkg = 'mingw'
-            # As of 2021-01-15, the latest package version (10.2.0) is broken.
-            #   a) I don't think it's been released (at least I haven't found
-            #      any announcements).
-            #   b) It was seemingly built without threading (no <mutex>,
-            #      <thread>, etc.).
-            $version = '8.1.0'
 
             if ($x64) {
                 # If the 32-bit version is installed, we won't detect that.
                 # But it's not that important, and we save a lot of time.
-                Install-Package $pkg --version $version
+                Install-Package $pkg
             } else {
                 # Assuming the 64-bit version is installed.
                 Remove-Package $pkg
-                Install-Package $pkg --version $version --x86
+                Install-Package $pkg --x86
             }
             echo $mingw_bin >> $env:GITHUB_PATH
 
