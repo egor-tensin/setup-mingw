@@ -14,6 +14,10 @@ inputs:
     description: Enable static linking workaround
     required: false
     default: 1
+  version:
+    description: Version of Mingw and Tools
+    required: false
+    default: 8.1.0
   cc:
     description: Set up cc/c++ executables
     required: false
@@ -49,6 +53,7 @@ runs:
         New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin_host) -Option Constant
 
         New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
+        New-Variable version -Value ('${{ inputs.version }}' -eq '8.1.0') -Option Constant
         New-Variable static_workaround -Value ('${{ inputs.static }}' -eq '1') -Option Constant
 
         $prefix32 = 'i686-w64-mingw32'
@@ -154,7 +159,7 @@ runs:
             #      any announcements).
             #   b) It was seemingly built without threading (no <mutex>,
             #      <thread>, etc.).
-            $version = '8.1.0'
+            # $version = '8.1.0'
 
             if ($x64) {
                 # If the 32-bit version is installed, we won't detect that.
