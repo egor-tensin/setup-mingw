@@ -1,4 +1,4 @@
-name: Install MinGW
+name: Install Version Specific MinGW
 description: Install MinGW-w64
 
 inputs:
