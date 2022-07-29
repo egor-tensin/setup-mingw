@@ -16,6 +16,7 @@ Use it in your workflow like this:
       uses: egor-tensin/setup-mingw@v2
       with:
         platform: x64
+        version: 10.2.0
 
 * `x64` is the default value for the `platform` parameter and can be omitted.
 Use `x86` if you want to build 32-bit binaries.
@@ -33,6 +34,8 @@ API
 | Input     | Value   | Default | Description
 | --------- | ------- | ------- | -----------
 | platform  | x64     | ✓       | Install the x86_64 toolchain.
+|           | *any*   |         | Install the i686 toolchain.
+| version   | 8.1.0   | ✓       | Install a specific version of the toolchain.
 |           | *any*   |         | Install the i686 toolchain.
 | cygwin    | *any*   | ✓       | Install native binaries.
 |           | 1       |         | Install Cygwin packages.
