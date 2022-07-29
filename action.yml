@@ -53,7 +53,7 @@ runs:
         New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin_host) -Option Constant
 
         New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
-        New-Variable version -Value ('${{ inputs.version }}' -eq '8.1.0') -Option Constant
+        New-Variable version -Value '${{ inputs.version }}' -Option Constant
         New-Variable static_workaround -Value ('${{ inputs.static }}' -eq '1') -Option Constant
 
         $prefix32 = 'i686-w64-mingw32'
