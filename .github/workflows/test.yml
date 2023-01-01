@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Cygwin
         uses: egor-tensin/setup-cygwin@v4
       - name: Set up MinGW
@@ -58,9 +58,9 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v1
+        uses: egor-tensin/cleanup-path@v3
         if: runner.os == 'Windows'
       - name: Set up MinGW
         id: setup
