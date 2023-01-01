@@ -179,10 +179,10 @@ runs:
         $gxx = $prefix + '-g++'
         $windres = $prefix = '-windres'
 
-        echo "::set-output name=prefix::$prefix"
-        echo "::set-output name=gcc::$gcc"
-        echo "::set-output name=gxx::$gxx"
-        echo "::set-output name=windres::$windres"
+        echo "prefix=$prefix"   >> $env:GITHUB_OUTPUT
+        echo "gcc=$gcc"         >> $env:GITHUB_OUTPUT
+        echo "gxx=$gxx"         >> $env:GITHUB_OUTPUT
+        echo "windres=$windres" >> $env:GITHUB_OUTPUT
       shell: pwsh
 
     - run: |
