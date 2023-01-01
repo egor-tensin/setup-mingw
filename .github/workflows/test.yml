@@ -12,10 +12,9 @@ jobs:
   cygwin:
     strategy:
       matrix:
-        platform: [x86, x64]
         hardlinks: [0, 1]
     runs-on: windows-latest
-    name: 'Cygwin: ${{ matrix.platform }} / hardlinks${{ matrix.hardlinks }}'
+    name: 'Cygwin: hardlinks${{ matrix.hardlinks }}'
     defaults:
       run:
         shell: pwsh
@@ -23,12 +22,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install Cygwin
-        uses: egor-tensin/setup-cygwin@v3
+        uses: egor-tensin/setup-cygwin@v4
       - name: Set up MinGW
         id: setup
         uses: ./
         with:
-          platform: '${{ matrix.platform }}'
           cygwin: 1
           cc: 1
           hardlinks: '${{ matrix.hardlinks }}'
