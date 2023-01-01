@@ -11,6 +11,8 @@ on:
 jobs:
   cygwin:
     strategy:
+      # It's much easier to re-run as few jobs as possible:
+      fail-fast: false
       matrix:
         hardlinks: [0, 1]
     runs-on: windows-latest
@@ -44,6 +46,8 @@ jobs:
 
   test:
     strategy:
+      # It's much easier to re-run as few jobs as possible:
+      fail-fast: false
       matrix:
         platform: [x86, x64]
         os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04, ubuntu-latest, windows-2019, windows-2022, windows-latest]
