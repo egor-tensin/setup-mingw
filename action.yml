@@ -22,6 +22,10 @@ inputs:
     description: On Cygwin, replace executable symlinks with hardlinks
     required: false
     default: 0
+  version:
+    description: Specify mingw version; will fall back to package manager default if not supplied
+    required: false
+    default: ''
 
 outputs:
   prefix:
@@ -43,6 +47,8 @@ runs:
     - id: setup
       run: |
         New-Variable os -Value '${{ runner.os }}' -Option Constant
+        New-Variable mingw_version -Value '${{ inputs.version }}' -Option Constant
+        New-Variable mingw_version_supplied -Value ('${{ inputs.version }}' -ne '') -Option Constant
 
         New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
         New-Variable cygwin_host -Value ('${{ inputs.cygwin }}' -eq '1') -Option Constant
@@ -104,7 +110,11 @@ runs:
         }
 
         if ($linux_host) {
-            Install-Package mingw-w64
+            if ($mingw_version_supplied) {
+                Install-Package mingw-w64=$mingw_version
+            } else {
+                Install-Package mingw-w64
+            }
 
             # Make the compilers use the POSIX threading model, whatever that
             # is.  Without it, the stuff from <mutex>/<thread>/etc. doesn't
@@ -125,7 +135,11 @@ runs:
             }
         } elseif ($cygwin_host) {
             $pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
-            Install-Package $pkg
+            if ($mingw_version_supplied) {
+                Install-Package $pkg --version $mingw_version
+            } else {
+                Install-Package $pkg
+            }
 
             $bin_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/bin"
             $lib_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/lib"
@@ -153,11 +167,19 @@ runs:
             if ($x64) {
                 # If the 32-bit version is installed, we won't detect that.
                 # But it's not that important, and we save a lot of time.
-                Install-Package $pkg
+                if ($mingw_version_supplied) {
+                    Install-Package $pkg --version $mingw_version
+                } else {
+                    Install-Package $pkg
+                }
             } else {
                 # Assuming the 64-bit version is installed.
                 Remove-Package $pkg
-                Install-Package $pkg --x86
+                if ($mingw_version_supplied) {
+                    Install-Package $pkg --version $mingw_version --x86
+                } else {
+                    Install-Package $pkg  --x86
+                }
             }
             echo $mingw_bin >> $env:GITHUB_PATH
 
