@@ -30,18 +30,20 @@ Disable this by setting the `cc` parameter to `0`.
 API
 ---
 
-| Input     | Value   | Default | Description
-| --------- | ------- | ------- | -----------
-| platform  | x64     | ✓       | Install the x86_64 toolchain.
-|           | *any*   |         | Install the i686 toolchain.
-| cygwin    | *any*   | ✓       | Install native binaries.
-|           | 1       |         | Install Cygwin packages.
-| static    | 1       | ✓       | Enable the static-linking workaround.
-|           | *any*   |         | Disable the static-linking workaround.
-| cc        | 1       | ✓       | Set up `cc`/`c++` executables.
-|           | *any*   |         | Don't set up `cc`/`c++`.
-| hardlinks | *any*   | ✓       | Cygwin: don't convert any symlinks.
-|           | 1       |         | Cygwin: convert symlinks in /usr/bin to hardlinks.
+| Input     | Value    | Default | Description
+| --------- | -------- | ------- | -----------
+| platform  | x64      | ✓       | Install the x86_64 toolchain.
+|           | *any*    |         | Install the i686 toolchain.
+| cygwin    | *any*    | ✓       | Install native binaries.
+|           | 1        |         | Install Cygwin packages.
+| static    | 1        | ✓       | Enable the static-linking workaround.
+|           | *any*    |         | Disable the static-linking workaround.
+| cc        | 1        | ✓       | Set up `cc`/`c++` executables.
+|           | *any*    |         | Don't set up `cc`/`c++`.
+| hardlinks | *any*    | ✓       | Cygwin: don't convert any symlinks.
+|           | 1        |         | Cygwin: convert symlinks in /usr/bin to hardlinks.
+| version   |          | ✓       | Mingw version will be package manager default.
+|           | *string* |         | Mingw version specified will be installed, packager manager permitting.
 
 | Output  | Example                  | Description
 | ------- | ------------------------ | -----------
