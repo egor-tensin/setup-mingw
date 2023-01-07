@@ -178,7 +178,7 @@ runs:
                 if ($mingw_version_supplied) {
                     Install-Package $pkg --version $mingw_version --x86
                 } else {
-                    Install-Package $pkg  --x86
+                    Install-Package $pkg --x86
                 }
             }
             echo $mingw_bin >> $env:GITHUB_PATH
