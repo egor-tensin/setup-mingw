@@ -76,3 +76,28 @@ jobs:
         if: runner.os == 'Windows'
       - name: Check cc/c++
         uses: ./.github/actions/check-cc
+
+  different_versions:
+    strategy:
+      matrix:
+        version: ['8.1.0', '12.2.0']
+    runs-on: windows-latest
+    name: 'Version: ${{ matrix.version }}'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v3
+      - name: Set up MinGW
+        id: setup
+        uses: ./
+        with:
+          version: '${{ matrix.version }}'
+      - name: Build foo.exe
+        run: |
+          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o foo foo.cpp
+      - name: Run foo.exe
+        uses: ./.github/actions/run-foo
