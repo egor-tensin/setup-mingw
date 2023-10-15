@@ -184,8 +184,8 @@ runs:
             echo $mingw_bin >> $env:GITHUB_PATH
 
             if ($static_workaround) {
-                Remove-Item (Join-Path $mingw_lib 'libpthread.dll.a')
-                Remove-Item (Join-Path $mingw_lib 'libwinpthread.dll.a')
+                Remove-Item (Join-Path $mingw_lib 'libpthread.dll.a') -ErrorAction SilentlyContinue
+                Remove-Item (Join-Path $mingw_lib 'libwinpthread.dll.a') -ErrorAction SilentlyContinue
             }
         } else {
             throw "Sorry, installing MinGW is unsupported on $os"
