@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Install Cygwin
         uses: egor-tensin/setup-cygwin@v4
       - name: Set up MinGW
@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [x86, x64]
-        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04, ubuntu-latest, windows-2019, windows-2022, windows-latest]
+        os: [ubuntu-22.04, ubuntu-24.04, ubuntu-latest, windows-2022, windows-2025, windows-latest]
     runs-on: '${{ matrix.os }}'
     name: 'Test: ${{ matrix.os }} / ${{ matrix.platform }}'
     defaults:
@@ -58,9 +58,9 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v3
+        uses: egor-tensin/cleanup-path@v4
         if: runner.os == 'Windows'
       - name: Set up MinGW
         id: setup
@@ -88,9 +88,9 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v3
+        uses: egor-tensin/cleanup-path@v4
       - name: Set up MinGW
         id: setup
         uses: ./
