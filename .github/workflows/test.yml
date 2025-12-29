@@ -61,6 +61,10 @@ jobs:
         uses: ./
         with:
           version: '${{ matrix.version }}'
+      - name: Verify the version
+        uses: ./.github/actions/check-cc
+        with:
+          version: '${{ matrix.version }}'
       - name: Build foo.exe
         run: |
           & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o foo foo.cpp
