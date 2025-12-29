@@ -8,7 +8,7 @@ This GitHub action sets up MinGW-w64 in your workflow run.
 Use it in your workflow like this:
 
     - name: Set up MinGW
-      uses: egor-tensin/setup-mingw@v2
+      uses: egor-tensin/setup-mingw@v3
       with:
         platform: x64
 
