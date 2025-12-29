@@ -9,41 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  cygwin:
-    strategy:
-      # It's much easier to re-run as few jobs as possible:
-      fail-fast: false
-      matrix:
-        hardlinks: [0, 1]
-    runs-on: windows-latest
-    name: 'Cygwin: hardlinks${{ matrix.hardlinks }}'
-    defaults:
-      run:
-        shell: pwsh
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Install Cygwin
-        uses: egor-tensin/setup-cygwin@v4
-      - name: Set up MinGW
-        id: setup
-        uses: ./
-        with:
-          cygwin: 1
-          cc: 1
-          hardlinks: '${{ matrix.hardlinks }}'
-      - name: Build foo.exe
-        run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o foo foo.cpp
-      - name: Run foo.exe
-        uses: ./.github/actions/run-foo
-      - name: Check cc/c++
-        uses: ./.github/actions/check-cc
-        if: matrix.hardlinks
-      - name: Check cc/c++
-        uses: ./.github/actions/check-cc-cygwin
-        if: '!matrix.hardlinks'
-
   test:
     strategy:
       # It's much easier to re-run as few jobs as possible:

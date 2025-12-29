@@ -6,18 +6,10 @@ inputs:
     description: Target platform
     required: false
     default: x64
-  cygwin:
-    description: Install Cygwin packages
-    required: false
-    default: 0
   cc:
     description: Set up cc/c++ executables
     required: false
     default: 1
-  hardlinks:
-    description: On Cygwin, replace executable symlinks with hardlinks
-    required: false
-    default: 0
   version:
     description: Specify mingw version; will fall back to package manager default if not supplied
     required: false
@@ -47,8 +39,7 @@ runs:
         New-Variable mingw_version_supplied -Value ('${{ inputs.version }}' -ne '') -Option Constant
 
         New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
-        New-Variable cygwin_host -Value ('${{ inputs.cygwin }}' -eq '1') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin_host) -Option Constant
+        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
 
         New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
 
@@ -74,9 +65,6 @@ runs:
             if ($script:linux_host) {
                 sudo apt-get update
                 sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends $Packages
-            } elseif ($script:cygwin_host) {
-                $choco = Locate-Choco
-                & $choco install $Packages -y --no-progress --source=cygwin
             } elseif ($script:windows_host) {
                 $choco = Locate-Choco
                 & $choco upgrade $Packages -y --no-progress --allow-downgrade
@@ -93,9 +81,6 @@ runs:
 
             if ($script:linux_host) {
                 sudo apt-get autoremove --purge -yq $Packages
-            } elseif ($script:cygwin_host) {
-                $choco = Locate-Choco
-                & $choco uninstall $Packages -y --no-progress --source=cygwin
             } elseif ($script:windows_host) {
                 $choco = Locate-Choco
                 & $choco uninstall $Packages -y --no-progress
@@ -120,18 +105,6 @@ runs:
             sudo update-alternatives --set "$prefix32-g++" "/usr/bin/$prefix32-g++-posix"
             sudo update-alternatives --set "$prefix64-gcc" "/usr/bin/$prefix64-gcc-posix"
             sudo update-alternatives --set "$prefix64-g++" "/usr/bin/$prefix64-g++-posix"
-        } elseif ($cygwin_host) {
-            $pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
-            if ($mingw_version_supplied) {
-                Install-Package $pkg --version $mingw_version
-            } else {
-                Install-Package $pkg
-            }
-
-            $bin_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/bin"
-            $lib_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/lib"
-
-            echo $bin_dir >> $env:GITHUB_PATH
         } elseif ($windows_host) {
             $choco = Locate-Choco
 
@@ -182,8 +155,7 @@ runs:
         New-Variable os -Value '${{ runner.os }}' -Option Constant
 
         New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
-        New-Variable cygwin_host -Value ('${{ inputs.cygwin }}' -eq '1') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin_host) -Option Constant
+        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
 
         New-Variable cc -Value ('${{ inputs.cc }}' -eq '1') -Option Constant
 
@@ -198,12 +170,11 @@ runs:
             $exe_path = (Get-Command $Exe).Path
             $link_dir = if ($script:windows_host) { Split-Path $exe_path } else { '/usr/local/bin' }
             $link_name = if ($script:windows_host) { "$LinkName.exe" } else { $LinkName }
-            $link_path = if ($script:cygwin_host) { "$link_dir/$link_name" } else { Join-Path $link_dir $link_name }
+            $link_path = Join-Path $link_dir $link_name
+
             echo "Creating link $link_path -> $exe_path"
             if ($script:linux_host) {
                 sudo ln -f -s $exe_path $link_path
-            } elseif ($script:cygwin_host) {
-                ln.exe -f -s $exe_path $link_path
             } elseif ($script:windows_host) {
                 New-Item -ItemType HardLink -Path $link_path -Value $exe_path -Force | Out-Null
             }
@@ -212,31 +183,6 @@ runs:
         if ($cc) {
             Link-Exe '${{ steps.setup.outputs.gcc }}' cc
             Link-Exe '${{ steps.setup.outputs.gxx }}' c++
-        }
-      shell: pwsh
-
-    - run: |
-        New-Variable cygwin_host -Value ('${{ inputs.cygwin }}' -eq '1') -Option Constant
-        New-Variable hardlinks -Value ('${{ inputs.hardlinks }}' -eq '1') -Option Constant
-
-        if ($cygwin_host -and $hardlinks) {
-            echo @'
-        while IFS= read -d '' -r link_path; do
-            dest_path="$( readlink --canonicalize-existing -- "$link_path" )"
-            dest_ext=".${dest_path##*.}"
-            [ "$dest_ext" == ".$dest_path" ] && dest_ext=
-            link_ext=".${link_path##*.}"
-            [ "$link_ext" == ".$link_path" ] && link_ext=
-            echo "Removing symlink $link_path" && rm -f -- "$link_path"
-            [ "$link_ext" != "$dest_ext" ] && echo "${PATHEXT//\;/
-        }" | grep -q --ignore-case --line-regexp -F -- "$dest_ext" && link_path="$link_path$dest_ext"
-            echo "Creating hardlink $link_path -> $dest_path" && ln -- "$dest_path" "$link_path"
-        done < <( find /usr/local/bin /usr/bin \
-                       -type l '-(' \
-                       -path /usr/local/bin/cc -o \
-                       -path /usr/local/bin/c++ \
-                       '-)' -print0 )
-        '@ | & bash.exe --login -o errexit -o nounset -o pipefail -o igncr
         }
       shell: pwsh
 
