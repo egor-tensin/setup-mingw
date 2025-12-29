@@ -45,7 +45,10 @@ jobs:
   different_versions:
     strategy:
       matrix:
-        version: ['8.1.0', '12.2.0']
+        version:
+          - 8.1.0
+          - 12.2.0
+          - 15.2.0
     runs-on: windows-latest
     name: 'Version: ${{ matrix.version }}'
     defaults:
