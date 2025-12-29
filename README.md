@@ -5,11 +5,6 @@ Set up MinGW-w64
 
 This GitHub action sets up MinGW-w64 in your workflow run.
 
-1. Installs MinGW-w64 on either Ubuntu or Windows.
-2. Fixes the infamous libwinpthread-1.dll [static linking issue].
-
-[static linking issue]: https://stackoverflow.com/q/13768515/514684
-
 Use it in your workflow like this:
 
     - name: Set up MinGW
@@ -36,8 +31,6 @@ API
 |           | *any* |         | Install the i686 toolchain.
 | cygwin    | *any* | ✓       | Install native binaries.
 |           | 1     |         | Install Cygwin packages.
-| static    | 1     | ✓       | Enable the static-linking workaround.
-|           | *any* |         | Disable the static-linking workaround.
 | cc        | 1     | ✓       | Set up `cc`/`c++` executables.
 |           | *any* |         | Don't set up `cc`/`c++`.
 | hardlinks | *any* | ✓       | Cygwin: don't convert any symlinks.

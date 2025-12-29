@@ -10,10 +10,6 @@ inputs:
     description: Install Cygwin packages
     required: false
     default: 0
-  static:
-    description: Enable static linking workaround
-    required: false
-    default: 1
   cc:
     description: Set up cc/c++ executables
     required: false
@@ -55,7 +51,6 @@ runs:
         New-Variable windows_host -Value ($os -eq 'Windows' -and !$cygwin_host) -Option Constant
 
         New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
-        New-Variable static_workaround -Value ('${{ inputs.static }}' -eq '1') -Option Constant
 
         $prefix32 = 'i686-w64-mingw32'
         $prefix64 = 'x86_64-w64-mingw32'
@@ -125,14 +120,6 @@ runs:
             sudo update-alternatives --set "$prefix32-g++" "/usr/bin/$prefix32-g++-posix"
             sudo update-alternatives --set "$prefix64-gcc" "/usr/bin/$prefix64-gcc-posix"
             sudo update-alternatives --set "$prefix64-g++" "/usr/bin/$prefix64-g++-posix"
-
-            if ($static_workaround) {
-                sudo rm `
-                    "/usr/$prefix32/lib/libpthread.dll.a" `
-                    "/usr/$prefix32/lib/libwinpthread.dll.a" `
-                    "/usr/$prefix64/lib/libpthread.dll.a" `
-                    "/usr/$prefix64/lib/libwinpthread.dll.a"
-            }
         } elseif ($cygwin_host) {
             $pkg = if ($x64) { 'mingw64-x86_64-gcc-g++' } else { 'mingw64-i686-gcc-g++' }
             if ($mingw_version_supplied) {
@@ -145,11 +132,6 @@ runs:
             $lib_dir = cygpath.exe -wa "/usr/$prefix/sys-root/mingw/lib"
 
             echo $bin_dir >> $env:GITHUB_PATH
-
-            if ($static_workaround) {
-                Remove-Item (Join-Path $lib_dir 'libpthread.dll.a')
-                Remove-Item (Join-Path $lib_dir 'libwinpthread.dll.a')
-            }
         } elseif ($windows_host) {
             $choco = Locate-Choco
 
@@ -182,11 +164,6 @@ runs:
                 }
             }
             echo $mingw_bin >> $env:GITHUB_PATH
-
-            if ($static_workaround) {
-                Remove-Item (Join-Path $mingw_lib 'libpthread.dll.a')
-                Remove-Item (Join-Path $mingw_lib 'libwinpthread.dll.a')
-            }
         } else {
             throw "Sorry, installing MinGW is unsupported on $os"
         }
