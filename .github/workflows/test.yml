@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v4
+        uses: egor-tensin/cleanup-path@v5
         if: runner.os == 'Windows'
       - name: Set up MinGW
         id: setup
@@ -57,7 +57,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v4
+        uses: egor-tensin/cleanup-path@v5
       - name: Set up MinGW
         id: setup
         uses: ./
