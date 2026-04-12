@@ -3,8 +3,8 @@ name: Test
 on:
   push:
   schedule:
-    # Weekly, at 5:45 AM on Friday (somewhat randomly chosen).
-    - cron: '45 5 * * 5'
+    # Weekly, at 00:30 UTC on Friday (somewhat randomly chosen).
+    - cron: '30 00 * * 5'
   workflow_dispatch:
 
 jobs:
