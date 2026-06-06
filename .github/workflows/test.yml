@@ -32,11 +32,11 @@ jobs:
         with:
           platform: '${{ matrix.platform }}'
           cc: 1
-      - name: Build foo.exe
+      - name: Build threads.exe
         run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o foo foo.cpp
-      - name: Run foo.exe
-        uses: ./.github/actions/run-foo
+          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
+      - name: Run threads.exe
+        uses: ./.github/actions/run-threads
         if: runner.os == 'Windows'
       - name: Check cc/c++
         uses: ./.github/actions/check-cc
@@ -67,8 +67,8 @@ jobs:
         uses: ./.github/actions/check-cc
         with:
           version: '${{ matrix.version }}'
-      - name: Build foo.exe
+      - name: Build threads.exe
         run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o foo foo.cpp
-      - name: Run foo.exe
-        uses: ./.github/actions/run-foo
+          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
+      - name: Run threads.exe
+        uses: ./.github/actions/run-threads

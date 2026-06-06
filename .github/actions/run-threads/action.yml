@@ -1,5 +1,5 @@
-name: Run foo.exe
-description: Run foo.exe and verify its output
+name: Run threads.exe
+description: Run threads.exe and verify its output
 runs:
   using: composite
   steps:
@@ -10,7 +10,7 @@ runs:
         Doing something #3
         "@
 
-        $actual = & (Join-Path . foo)
+        $actual = & (Join-Path . test threads)
         $actual = $actual -join [Environment]::NewLine
 
         echo @"
