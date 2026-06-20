@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v5
         if: runner.os == 'Windows'
@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v5
       - name: Set up MinGW
