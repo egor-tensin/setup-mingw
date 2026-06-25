@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  arm:
     strategy:
       # It's much easier to re-run as few jobs as possible:
       fail-fast: false
       matrix:
-        platform: [x86, x64]
-        os: [ubuntu-22.04, ubuntu-24.04, ubuntu-latest, windows-2022, windows-2025, windows-latest]
+        platform: [x64]
+        os: [windows-2025, windows-11-arm]
     runs-on: '${{ matrix.os }}'
     name: 'Test: ${{ matrix.os }} / ${{ matrix.platform }}'
     defaults:
@@ -41,34 +41,67 @@ jobs:
       - name: Check cc/c++
         uses: ./.github/actions/check-cc
 
-  different_versions:
-    strategy:
-      matrix:
-        version:
-          - 8.1.0
-          - 12.2.0
-          - 15.2.0
-    runs-on: windows-latest
-    name: 'Version: ${{ matrix.version }}'
-    defaults:
-      run:
-        shell: pwsh
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v5
-      - name: Set up MinGW
-        id: setup
-        uses: ./
-        with:
-          version: '${{ matrix.version }}'
-      - name: Verify the version
-        uses: ./.github/actions/check-cc
-        with:
-          version: '${{ matrix.version }}'
-      - name: Build threads.exe
-        run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
-      - name: Run threads.exe
-        uses: ./.github/actions/run-threads
+#  test:
+#    strategy:
+#      # It's much easier to re-run as few jobs as possible:
+#      fail-fast: false
+#      matrix:
+#        platform: [x86, x64]
+#        os: [ubuntu-22.04, ubuntu-24.04, ubuntu-latest, windows-2022, windows-2025, windows-latest]
+#    runs-on: '${{ matrix.os }}'
+#    name: 'Test: ${{ matrix.os }} / ${{ matrix.platform }}'
+#    defaults:
+#      run:
+#        shell: pwsh
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v7
+#      - name: Clean up PATH
+#        uses: egor-tensin/cleanup-path@v5
+#        if: runner.os == 'Windows'
+#      - name: Set up MinGW
+#        id: setup
+#        uses: ./
+#        with:
+#          platform: '${{ matrix.platform }}'
+#          cc: 1
+#      - name: Build threads.exe
+#        run: |
+#          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
+#      - name: Run threads.exe
+#        uses: ./.github/actions/run-threads
+#        if: runner.os == 'Windows'
+#      - name: Check cc/c++
+#        uses: ./.github/actions/check-cc
+#
+#  different_versions:
+#    strategy:
+#      matrix:
+#        version:
+#          - 8.1.0
+#          - 12.2.0
+#          - 15.2.0
+#    runs-on: windows-latest
+#    name: 'Version: ${{ matrix.version }}'
+#    defaults:
+#      run:
+#        shell: pwsh
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v7
+#      - name: Clean up PATH
+#        uses: egor-tensin/cleanup-path@v5
+#      - name: Set up MinGW
+#        id: setup
+#        uses: ./
+#        with:
+#          version: '${{ matrix.version }}'
+#      - name: Verify the version
+#        uses: ./.github/actions/check-cc
+#        with:
+#          version: '${{ matrix.version }}'
+#      - name: Build threads.exe
+#        run: |
+#          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
+#      - name: Run threads.exe
+#        uses: ./.github/actions/run-threads

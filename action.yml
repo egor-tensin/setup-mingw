@@ -32,21 +32,9 @@ outputs:
 runs:
   using: composite
   steps:
-    - id: setup
+    - id: runner_id
+      shell: pwsh
       run: |
-        New-Variable os -Value '${{ runner.os }}' -Option Constant
-        New-Variable mingw_version -Value '${{ inputs.version }}' -Option Constant
-        New-Variable mingw_version_supplied -Value ('${{ inputs.version }}' -ne '') -Option Constant
-
-        New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
-
-        New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
-
-        $prefix32 = 'i686-w64-mingw32'
-        $prefix64 = 'x86_64-w64-mingw32'
-        $prefix = if ($x64) { $prefix64 } else { $prefix32 }
-
         function Locate-Choco {
             $path = Get-Command 'choco' -ErrorAction SilentlyContinue
             if ($path) {
@@ -56,143 +44,263 @@ runs:
             }
         }
 
-        function Install-Package {
-            param(
-                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
-                [string[]] $Packages
-            )
+        $choco = Locate-Choco
 
-            if ($script:linux_host) {
-                sudo apt-get update
-                sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends $Packages
-            } elseif ($script:windows_host) {
-                $choco = Locate-Choco
-                & $choco upgrade $Packages -y --no-progress --allow-downgrade
-            } else {
-                throw "Sorry, installing packages is unsupported on $script:os"
+        echo "arm=false" >> $env:GITHUB_OUTPUT
+        echo "version_supported=false" >> $env:GITHUB_OUTPUT
+
+        switch -Exact ('${{ runner.os }}') {
+            'Windows' {
+                switch ('${{ runner.arch }}'.ToLower()) {
+                    {($_ -eq 'arm') -or ($_ -eq 'arm64')} {
+                        # On ARM, this action uses MSYS2, which doesn't really support different versions
+                        # (it being based on Arch & pacman).
+                        echo "arm=true" >> $env:GITHUB_OUTPUT
+                        echo "prefix=aarch-w64-mingw32" >> $env:GITHUB_OUTPUT
+                    }
+                    'x86' {
+                        # Install via Chocolatey; it does support different versions explicitly.
+                        echo "version_supported=true" >> $env:GITHUB_OUTPUT
+                        echo "prefix=i686-w64-mingw32" >> $env:GITHUB_OUTPUT
+                    }
+                    'x64' {
+                        # Install via Chocolatey; it does support different versions explicitly.
+                        echo "version_supported=true" >> $env:GITHUB_OUTPUT
+                        echo "prefix=x86_64-w64-mingw32" >> $env:GITHUB_OUTPUT
+                    }
+                    default {
+                        throw "Sorry, Windows runners on platform ${{ runner.arch }} are not supported."
+                    }
+                }
+            }
+            'Linux' {
+                # Similar to Windows ARM, Ubuntu doesn't really come with a bunch of versions
+                # in its repos.
+                switch -Exact ('${{ runner.arch }}'.ToLower()) {
+                    'x86' {}
+                    'x64' {}
+                    default {
+                        # I guess we're waiting for Canonical? Idk, they obviously do images for ARM,
+                        # but GitHub Actions don't support them as of June '26.
+                        throw "Sorry, Linux runners on platform ${{ runner.arch }} are not supported."
+                    }
+                }
+            }
+            'macOS' {
+                throw "Sorry, installing packages is not supported on ${{ runner.os }}"
+            }
+            default {
+                throw "Unsupported runner OS: ${{ runner.os }}"
             }
         }
 
-        function Remove-Package {
-            param(
-                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
-                [string[]] $Packages
-            )
-
-            if ($script:linux_host) {
-                sudo apt-get autoremove --purge -yq $Packages
-            } elseif ($script:windows_host) {
-                $choco = Locate-Choco
-                & $choco uninstall $Packages -y --no-progress
-            } else {
-                throw "Sorry, removing packages is unsupported on $script:os"
-            }
-        }
-
-        if ($linux_host) {
-            if ($mingw_version_supplied) {
-                Install-Package mingw-w64=$mingw_version
-            } else {
-                Install-Package mingw-w64
-            }
-
-            # Make the compilers use the POSIX threading model, whatever that
-            # is.  Without it, the stuff from <mutex>/<thread>/etc. doesn't
-            # compile.  Of course, it makes the binaries depend on
-            # libwinpthread-1.dll, but what you gonna do?
-
-            sudo update-alternatives --set "$prefix32-gcc" "/usr/bin/$prefix32-gcc-posix"
-            sudo update-alternatives --set "$prefix32-g++" "/usr/bin/$prefix32-g++-posix"
-            sudo update-alternatives --set "$prefix64-gcc" "/usr/bin/$prefix64-gcc-posix"
-            sudo update-alternatives --set "$prefix64-g++" "/usr/bin/$prefix64-g++-posix"
-        } elseif ($windows_host) {
-            $choco = Locate-Choco
-
-            $mingw32 = 'mingw32'
-            $mingw64 = 'mingw64'
-            $mingw = if ($x64) { $mingw64 } else { $mingw32 }
-
-            $pkg = 'mingw'
-
-            if ($x64) {
-                # If the 32-bit version is installed, we won't detect that.
-                # But it's not that important, and we save a lot of time.
-                if ($mingw_version_supplied) {
-                    Install-Package $pkg --version $mingw_version
-                } else {
-                    Install-Package $pkg
-                }
-            } else {
-                # Assuming the 64-bit version is installed.
-                Remove-Package $pkg
-                if ($mingw_version_supplied) {
-                    Install-Package $pkg --version $mingw_version --x86
-                } else {
-                    Install-Package $pkg --x86
-                }
-            }
-
-            $mingw_install_new = Join-Path C: ProgramData mingw64 $mingw
-            $mingw_install_old = Join-Path C: ProgramData chocolatey lib mingw tools install
-
-            if (Test-Path $mingw_install_new) {
-                $mingw_install = $mingw_install_new
-            } elseif (Test-Path $mingw_install_old) {
-                $mingw_install = Join-Path $mingw_install_old $mingw
-            } else {
-                throw "Where was MinGW installed? Not sure"
-            }
-
-            $mingw_bin = Join-Path $mingw_install bin
-            echo $mingw_bin >> $env:GITHUB_PATH
+    - id: msys_detect
+      shell: pwsh
+      run: |
+        $test_path = Join-Path C: msys64
+        echo "path=$test_path" >> $env:GITHUB_OUTPUT
+        $result = Test-Path $test_path -PathType Container
+        if ($result) {
+            echo 'Existing MSYS2 installation detected at $path (likely on a GitHub-hosted runner)'
+            echo "path=$path" >> $env:GITHUB_OUTPUT
         } else {
-            throw "Sorry, installing MinGW is unsupported on $os"
+            echo "Couldn't detect a MSYS2 installation (needed for ARM runners), going to set it up"
+            echo 'path=' >> $env:GITHUB_OUTPUT
         }
 
-        $gcc = $prefix + '-gcc'
-        $gxx = $prefix + '-g++'
-        $windres = $prefix = '-windres'
+    - id: msys_install
+      uses: msys2/setup-msys2@v2
+      # As of June '26, Windows ARM hosted runners don't come with MSYS2, and
+      # it is the easiest way to install MinGW-w64:
+      # https://github.com/actions/runner-images/tree/main/images/windows
+      if: "${{ steps.msys_detect.outputs.path == '' }}"
 
-        echo "prefix=$prefix"   >> $env:GITHUB_OUTPUT
-        echo "gcc=$gcc"         >> $env:GITHUB_OUTPUT
-        echo "gxx=$gxx"         >> $env:GITHUB_OUTPUT
-        echo "windres=$windres" >> $env:GITHUB_OUTPUT
+    - shell: pwsh
+      run: |
+        switch -Exact ('${{ steps.msys_detect.outputs.path }}') {
+        }
+
+    - id: msys_dir
       shell: pwsh
-
-    - run: |
-        New-Variable os -Value '${{ runner.os }}' -Option Constant
-
-        New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
-
-        New-Variable cc -Value ('${{ inputs.cc }}' -eq '1') -Option Constant
-
-        function Link-Exe {
-            param(
-                [Parameter(Mandatory=$true)]
-                [string] $Exe,
-                [Parameter(Mandatory=$true)]
-                [string] $LinkName
-            )
-
-            $exe_path = (Get-Command $Exe).Path
-            $link_dir = if ($script:windows_host) { Split-Path $exe_path } else { '/usr/local/bin' }
-            $link_name = if ($script:windows_host) { "$LinkName.exe" } else { $LinkName }
-            $link_path = Join-Path $link_dir $link_name
-
-            echo "Creating link $link_path -> $exe_path"
-            if ($script:linux_host) {
-                sudo ln -f -s $exe_path $link_path
-            } elseif ($script:windows_host) {
-                New-Item -ItemType HardLink -Path $link_path -Value $exe_path -Force | Out-Null
+      run: |
+        switch -Exact ('${{ steps.msys_detect.outputs.path }}') {
+            '' {
+                $path = '${{ steps.msys_install.outputs.msys2-location }}'
+            }
+            default {
+                $path = '${{ steps.msys_detect.outputs.path }}'
             }
         }
+        echo "MSYS2 path: $path"
+        echo "path=$path" >> $env:GITHUB_OUTPUT
 
-        if ($cc) {
-            Link-Exe '${{ steps.setup.outputs.gcc }}' cc
-            Link-Exe '${{ steps.setup.outputs.gxx }}' c++
-        }
-      shell: pwsh
+#    - id: setup
+#      shell: pwsh
+#      run: |
+#        New-Variable os -Value '${{ runner.os }}' -Option Constant
+#        New-Variable mingw_version -Value '${{ inputs.version }}' -Option Constant
+#        New-Variable mingw_version_provided -Value ('${{ inputs.version }}' -ne '') -Option Constant
+#
+#        New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
+#        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
+#
+#        New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
+#
+#        $prefix32 = 'i686-w64-mingw32'
+#        $prefix64 = 'x86_64-w64-mingw32'
+#        $prefix = if ($x64) { $prefix64 } else { $prefix32 }
+#
+#        function Install-PackageWin {
+#            param(
+#                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
+#                [string[]] $Packages
+#            )
+#            $choco = Locate-Choco
+#            & $choco upgrade $Packages -y --no-progress --allow-downgrade
+#        }
+#
+#        function Install-Package {
+#            param(
+#                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
+#                [string[]] $Packages
+#            )
+#
+#            if ($script:linux_host) {
+#                sudo apt-get update
+#                sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends $Packages
+#            } elseif ($script:windows_host) {
+#            } else {
+#                throw "Sorry, installing packages is not supported on $script:os"
+#            }
+#        }
+#
+#        function Remove-Package {
+#            param(
+#                [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
+#                [string[]] $Packages
+#            )
+#
+#            if ($script:linux_host) {
+#                sudo apt-get autoremove --purge -yq $Packages
+#            } elseif ($script:windows_host) {
+#                $choco = Locate-Choco
+#                & $choco uninstall $Packages -y --no-progress
+#            } else {
+#                throw "Sorry, removing packages is not supported on $script:os"
+#            }
+#        }
+#
+#        function Install-Linux {
+#            if ($mingw_version_provided) {
+#                Install-Package mingw-w64=$mingw_version
+#            } else {
+#                Install-Package mingw-w64
+#            }
+#
+#            # Make the compilers use the POSIX threading model, whatever that
+#            # is.  Without it, the stuff from <mutex>/<thread>/etc. doesn't
+#            # compile.  Of course, it makes the binaries depend on
+#            # libwinpthread-1.dll, but what you gonna do?
+#
+#            sudo update-alternatives --set "$prefix32-gcc" "/usr/bin/$prefix32-gcc-posix"
+#            sudo update-alternatives --set "$prefix32-g++" "/usr/bin/$prefix32-g++-posix"
+#            sudo update-alternatives --set "$prefix64-gcc" "/usr/bin/$prefix64-gcc-posix"
+#            sudo update-alternatives --set "$prefix64-g++" "/usr/bin/$prefix64-g++-posix"
+#        }
+#
+#        function Install-Windows {
+#            $choco = Locate-Choco
+#
+#            $mingw32 = 'mingw32'
+#            $mingw64 = 'mingw64'
+#            $mingw = if ($x64) { $mingw64 } else { $mingw32 }
+#
+#            $pkg = 'mingw'
+#
+#            if ($x64) {
+#                # If the 32-bit version is installed, we won't detect that.
+#                # But it's not that important, and we save a lot of time.
+#                if ($mingw_version_provided) {
+#                    Install-Package $pkg --version $mingw_version
+#                } else {
+#                    Install-Package $pkg
+#                }
+#            } else {
+#                # Assuming the 64-bit version is installed.
+#                Remove-Package $pkg
+#                if ($mingw_version_provided) {
+#                    Install-Package $pkg --version $mingw_version --x86
+#                } else {
+#                    Install-Package $pkg --x86
+#                }
+#            }
+#
+#            $mingw_install_new = Join-Path C: ProgramData mingw64 $mingw
+#            $mingw_install_old = Join-Path C: ProgramData chocolatey lib mingw tools install
+#
+#            if (Test-Path $mingw_install_new) {
+#                $mingw_install = $mingw_install_new
+#            } elseif (Test-Path $mingw_install_old) {
+#                $mingw_install = Join-Path $mingw_install_old $mingw
+#            } else {
+#                throw "Where was MinGW installed? Not sure"
+#            }
+#
+#            $mingw_bin = Join-Path $mingw_install bin
+#            echo $mingw_bin >> $env:GITHUB_PATH
+#        }
+#
+#        if ($linux_host) {
+#            Install-Linux
+#        } elseif ($windows_host) {
+#            Install-Windows
+#        } else {
+#            throw "Sorry, installing MinGW is unsupported on $os"
+#        }
+#
+#        $gcc = $prefix + '-gcc'
+#        $gxx = $prefix + '-g++'
+#        $windres = $prefix = '-windres'
+#
+#        echo "prefix=$prefix"   >> $env:GITHUB_OUTPUT
+#        echo "gcc=$gcc"         >> $env:GITHUB_OUTPUT
+#        echo "gxx=$gxx"         >> $env:GITHUB_OUTPUT
+#        echo "windres=$windres" >> $env:GITHUB_OUTPUT
+#
+#    - shell: pwsh
+#      run: |
+#        New-Variable os -Value '${{ runner.os }}' -Option Constant
+#
+#        New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
+#        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
+#
+#        New-Variable cc -Value ('${{ inputs.cc }}' -eq '1') -Option Constant
+#
+#        function Link-Exe {
+#            param(
+#                [Parameter(Mandatory=$true)]
+#                [string] $Exe,
+#                [Parameter(Mandatory=$true)]
+#                [string] $LinkName
+#            )
+#
+#            $exe_path = (Get-Command $Exe).Path
+#            $link_dir = if ($script:windows_host) { Split-Path $exe_path } else { '/usr/local/bin' }
+#            $link_name = if ($script:windows_host) { "$LinkName.exe" } else { $LinkName }
+#            $link_path = Join-Path $link_dir $link_name
+#
+#            echo "Creating link $link_path -> $exe_path"
+#            if ($script:linux_host) {
+#                sudo ln -f -s $exe_path $link_path
+#            } elseif ($script:windows_host) {
+#                New-Item -ItemType HardLink -Path $link_path -Value $exe_path -Force | Out-Null
+#            }
+#        }
+#
+#        if ($cc) {
+#            Link-Exe '${{ steps.setup.outputs.gcc }}' cc
+#            Link-Exe '${{ steps.setup.outputs.gxx }}' c++
+#        }
 
 branding:
   icon: star
