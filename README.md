@@ -23,12 +23,12 @@ API
 
 | Input     | Value | Default | Description
 | --------- | ----- | ------- | -----------
-| platform  | x64   | ✓       | Install the x86_64 toolchain.
-|           | *any* |         | Install the i686 toolchain.
-| cc        | 1     | ✓       | Set up `cc`/`c++` executables.
-|           | *any* |         | Don't set up `cc`/`c++`.
-| version   |       | ✓       | Install the default (latest) version.
-|           | *any* |         | Install the specified version, if possible.
+| platform  | x64   | ✓       | Install the x86_64 toolchain
+|           | *any* |         | Install the i686 toolchain
+| cc        | 1     | ✓       | Set up `cc`/`c++` executables
+|           | *any* |         | Don't set up `cc`/`c++`
+| version   |       | ✓       | Install the default (latest) version
+|           | *any* |         | Install the specified version, if possible
 
 | Output  | Example                  | Description
 | ------- | ------------------------ | -----------
