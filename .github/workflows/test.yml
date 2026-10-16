@@ -2,6 +2,8 @@ name: Test
 
 on:
   push:
+    paths-ignore:
+      - '**.md'
   schedule:
     # Weekly, at 00:30 UTC on Friday (somewhat randomly chosen).
     - cron: '30 00 * * 5'
