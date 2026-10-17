@@ -17,8 +17,16 @@ jobs:
       # It's much easier to re-run as few jobs as possible:
       fail-fast: false
       matrix:
-        platform: [x86, x64]
-        os: [ubuntu-22.04, ubuntu-24.04, ubuntu-latest, windows-2022, windows-2025, windows-latest]
+        platform:
+          - x86
+          - x64
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+          - windows-2022
+          - windows-2025
+          - windows-latest
     runs-on: ${{ matrix.os }}
     name: |
       Test: ${{ matrix.os }} / ${{ matrix.platform }}
