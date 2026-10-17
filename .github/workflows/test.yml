@@ -9,6 +9,8 @@ on:
     - cron: '30 00 * * 5'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   test:
     strategy:
@@ -17,31 +19,36 @@ jobs:
       matrix:
         platform: [x86, x64]
         os: [ubuntu-22.04, ubuntu-24.04, ubuntu-latest, windows-2022, windows-2025, windows-latest]
-    runs-on: '${{ matrix.os }}'
-    name: 'Test: ${{ matrix.os }} / ${{ matrix.platform }}'
+    runs-on: ${{ matrix.os }}
+    name: |
+      Test: ${{ matrix.os }} / ${{ matrix.platform }}
     defaults:
       run:
         shell: pwsh
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v5
         if: runner.os == 'Windows'
       - name: Set up MinGW
         id: setup
-        uses: ./
+        uses: $/
         with:
-          platform: '${{ matrix.platform }}'
+          platform: ${{ matrix.platform }}
           cc: 1
       - name: Build threads.exe
+        env:
+          GXX: ${{ steps.setup.outputs.gxx }}
         run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
+          & $env:GXX -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
       - name: Run threads.exe
-        uses: ./.github/actions/run-threads
+        uses: $/.github/actions/run-threads
         if: runner.os == 'Windows'
       - name: Check cc/c++
-        uses: ./.github/actions/check-cc
+        uses: $/.github/actions/check-cc
 
   test_windows_versions:
     strategy:
@@ -51,29 +58,34 @@ jobs:
           - 12.2.0
           - 15.2.0
     runs-on: windows-latest
-    name: 'Version: ${{ matrix.version }}'
+    name: |
+      Version: ${{ matrix.version }}
     defaults:
       run:
         shell: pwsh
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v5
       - name: Set up MinGW
         id: setup
-        uses: ./
+        uses: $/
         with:
-          version: '${{ matrix.version }}'
+          version: ${{ matrix.version }}
       - name: Verify the version
-        uses: ./.github/actions/check-cc
+        uses: $/.github/actions/check-cc
         with:
-          version: '${{ matrix.version }}'
+          version: ${{ matrix.version }}
       - name: Build threads.exe
+        env:
+          GXX: ${{ steps.setup.outputs.gxx }}
         run: |
-          & '${{ steps.setup.outputs.gxx }}' -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
+          & $env:GXX -std=c++14 -o (Join-Path . test threads) (Join-Path . test threads.cpp)
       - name: Run threads.exe
-        uses: ./.github/actions/run-threads
+        uses: $/.github/actions/run-threads
 
   release:
     if: github.ref_type == 'tag'
@@ -87,5 +99,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Release
         uses: softprops/action-gh-release@v3

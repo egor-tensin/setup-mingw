@@ -18,30 +18,32 @@ inputs:
 outputs:
   prefix:
     description: Cross-compilation toolchain prefix
-    value: '${{ steps.setup.outputs.prefix }}'
+    value: ${{ steps.setup.outputs.prefix }}
   gcc:
     description: gcc binary name
-    value: '${{ steps.setup.outputs.gcc }}'
+    value: ${{ steps.setup.outputs.gcc }}
   gxx:
     description: g++ binary name
-    value: '${{ steps.setup.outputs.gxx }}'
+    value: ${{ steps.setup.outputs.gxx }}
   windres:
     description: windres binary name
-    value: '${{ steps.setup.outputs.windres }}'
+    value: ${{ steps.setup.outputs.windres }}
 
 runs:
   using: composite
   steps:
     - id: setup
+      env:
+        ARG_VERSION: ${{ inputs.version }}
+        ARG_PLATFORM: ${{ inputs.platform }}
       run: |
-        New-Variable os -Value '${{ runner.os }}' -Option Constant
-        New-Variable mingw_version -Value '${{ inputs.version }}' -Option Constant
-        New-Variable mingw_version_supplied -Value ('${{ inputs.version }}' -ne '') -Option Constant
+        $linux_host = '${{ runner.os }}' -eq 'Linux'
+        $windows_host = '${{ runner.os }}' -eq 'Windows'
 
-        New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
+        $mingw_version = $env:ARG_VERSION
+        $mingw_version_supplied = $mingw_version -ne ''
 
-        New-Variable x64 -Value ('${{ inputs.platform }}' -eq 'x64') -Option Constant
+        $x64 = $env:ARG_PLATFORM -eq 'x64'
 
         $prefix32 = 'i686-w64-mingw32'
         $prefix64 = 'x86_64-w64-mingw32'
@@ -159,13 +161,15 @@ runs:
         echo "windres=$windres" >> $env:GITHUB_OUTPUT
       shell: pwsh
 
-    - run: |
-        New-Variable os -Value '${{ runner.os }}' -Option Constant
+    - env:
+        ARG_CC: ${{ inputs.cc }}
+        GCC: ${{ steps.setup.outputs.gcc }}
+        GXX: ${{ steps.setup.outputs.gxx }}
+      run: |
+        $linux_host = '${{ runner.os }}' -eq 'Linux'
+        $windows_host = '${{ runner.os }}' -eq 'Windows'
 
-        New-Variable linux_host -Value ($os -eq 'Linux') -Option Constant
-        New-Variable windows_host -Value ($os -eq 'Windows') -Option Constant
-
-        New-Variable cc -Value ('${{ inputs.cc }}' -eq '1') -Option Constant
+        $cc = $env:ARG_CC -eq '1'
 
         function Link-Exe {
             param(
@@ -189,8 +193,8 @@ runs:
         }
 
         if ($cc) {
-            Link-Exe '${{ steps.setup.outputs.gcc }}' cc
-            Link-Exe '${{ steps.setup.outputs.gxx }}' c++
+            Link-Exe $env:GCC cc
+            Link-Exe $env:GXX c++
         }
       shell: pwsh
 
