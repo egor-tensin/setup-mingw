@@ -12,6 +12,19 @@ on:
 permissions: {}
 
 jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-slim
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@v0.7.1
+
   test:
     strategy:
       # It's much easier to re-run as few jobs as possible:
