@@ -40,10 +40,10 @@ runs:
         $linux_host = '${{ runner.os }}' -eq 'Linux'
         $windows_host = '${{ runner.os }}' -eq 'Windows'
 
-        $mingw_version = $env:ARG_VERSION
+        $mingw_version = (Get-ChildItem env:ARG_VERSION).Value
         $mingw_version_supplied = $mingw_version -ne ''
 
-        $x64 = $env:ARG_PLATFORM -eq 'x64'
+        $x64 = (Get-ChildItem env:ARG_PLATFORM).Value -eq 'x64'
 
         $prefix32 = 'i686-w64-mingw32'
         $prefix64 = 'x86_64-w64-mingw32'
@@ -54,7 +54,7 @@ runs:
             if ($path) {
                 $path.Path
             } else {
-                Join-Path ${env:ProgramData} 'chocolatey' 'bin' 'choco'
+                Join-Path (Get-ChildItem env:ProgramData).Value 'chocolatey' 'bin' 'choco'
             }
         }
 
@@ -169,7 +169,7 @@ runs:
         $linux_host = '${{ runner.os }}' -eq 'Linux'
         $windows_host = '${{ runner.os }}' -eq 'Windows'
 
-        $cc = $env:ARG_CC -eq '1'
+        $cc = (Get-ChildItem env:ARG_CC).Value -eq '1'
 
         function Link-Exe {
             param(
@@ -193,8 +193,8 @@ runs:
         }
 
         if ($cc) {
-            Link-Exe $env:GCC cc
-            Link-Exe $env:GXX c++
+            Link-Exe (Get-ChildItem env:GCC).Value cc
+            Link-Exe (Get-ChildItem env:GXX).Value c++
         }
       shell: pwsh
 
