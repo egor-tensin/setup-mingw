@@ -41,6 +41,9 @@ jobs:
           - windows-2022
           - windows-2025
           - windows-latest
+        include:
+          - {platform: x86, expected_prefix: i686-w64-mingw32}
+          - {platform: x64, expected_prefix: x86_64-w64-mingw32}
     runs-on: ${{ matrix.os }}
     name: |
       Test: ${{ matrix.os }} / ${{ matrix.platform }}
@@ -61,6 +64,11 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           cc: 1
+      - name: Check prefix
+        env:
+          PREFIX: ${{ steps.setup.outputs.prefix }}
+        run: |
+          $env:PREFIX -eq '${{ matrix.expected_prefix }}' -or $(throw "Unexpected prefix: $env:PREFIX")
       - name: Build threads.exe
         env:
           GXX: ${{ steps.setup.outputs.gxx }}
@@ -97,10 +105,15 @@ jobs:
         uses: $/
         with:
           version: ${{ matrix.version }}
-      - name: Verify the version
+      - name: Verify version
         uses: $/.github/actions/check-cc
         with:
           version: ${{ matrix.version }}
+      - name: Check prefix
+        env:
+          PREFIX: ${{ steps.setup.outputs.prefix }}
+        run: |
+          $env:PREFIX -eq 'x86_64-w64-mingw32' -or $(throw "Unexpected prefix: $env:PREFIX")
       - name: Build threads.exe
         env:
           GXX: ${{ steps.setup.outputs.gxx }}
