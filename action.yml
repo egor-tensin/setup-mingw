@@ -153,7 +153,7 @@ runs:
 
         $gcc = $prefix + '-gcc'
         $gxx = $prefix + '-g++'
-        $windres = $prefix = '-windres'
+        $windres = $prefix + '-windres'
 
         echo "prefix=$prefix"   >> $env:GITHUB_OUTPUT
         echo "gcc=$gcc"         >> $env:GITHUB_OUTPUT
